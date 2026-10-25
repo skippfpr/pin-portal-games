@@ -1,0 +1,13 @@
+{
+ "id": "test-game",
+ "name": "Test Game",
+ "author": "Skipp",
+ "about": "Test Game, a game for a Pinball 2000 cabinet, made from the Game Template.",
+ "hardware": "p2kd",
+ "licence": "CC BY",
+ "version": "1.1",
+ "min_portal": "1.1.13",
+ "rights_confirmed": true,
+ "shared": "2026-10-25",
+ "portal_version": "1.1.13"
+}
