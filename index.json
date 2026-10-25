@@ -9,6 +9,7 @@
    "licence": "CC BY",
    "version": "1.1",
    "min_portal": "1.1.13",
+   "issue": 3,
    "bytes": 341938,
    "sha256": "0ce8bd1b3afd8b265908a4a3e3e68479d82d499fdaf74ce1c474d7d08a6c8486",
    "reviewed": false,
