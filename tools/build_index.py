@@ -39,6 +39,7 @@ def main():
         if os.path.isdir(t):
             standard = lc.standard_hashes(t)
     reviewed = load(os.path.join(ROOT, 'reviewed.json'), {})
+    issues = load(os.path.join(ROOT, 'issues.json'), {})
     old = {g.get('id'): g for g in (load(os.path.join(ROOT, 'index.json'), {}).get('games') or []) if isinstance(g, dict)}
     today = datetime.date.today().isoformat()
     out, bad = [], 0
@@ -79,7 +80,7 @@ def main():
         out.append({'id': gid, 'name': str(info.get('name') or res['name'])[:80], 'author': str(info.get('author') or '')[:40],
                     'about': str(info.get('about') or '')[:600], 'hardware': str(info.get('hardware') or '')[:12],
                     'licence': str(info.get('licence') or '')[:60], 'version': ver[:20], 'min_portal': minp[:20],
-                    'bytes': len(raw), 'sha256': sha, 'reviewed': reviewed.get(gid) == sha, 'code': res['code'][:40],
+                    'issue': int(issues.get(gid) or 0), 'bytes': len(raw), 'sha256': sha, 'reviewed': reviewed.get(gid) == sha, 'code': res['code'][:40],
                     'screenshot': os.path.isfile(os.path.join(d, 'screenshot.png')),
                     'updated': prev.get('updated') if prev.get('sha256') == sha and prev.get('updated') else today})
         print('ok   %s (%d KB, %d code files, %s)' % (gid, len(raw) // 1024, len(res['code']), 'reviewed' if out[-1]['reviewed'] else 'not reviewed'))
