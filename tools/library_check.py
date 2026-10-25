@@ -8,6 +8,7 @@ scan_zip(zf, standard=None) returns a dict:
   warnings   things worth knowing that do not block it
   code       the files that run as code (Python, JavaScript, HTML pages, shell scripts) and are not the standard ones from the Game Template
   id, name   from game.json
+  version, min_portal   from game.json (the game's own version, and the oldest Pin Portal it works with); either may be empty
   files, bytes   how many files, and their size once unpacked
 
 Hard refusals (nothing overrides them): paths that climb out of the folder, links, programs and libraries, any shell script other than the one start script,
@@ -23,6 +24,7 @@ MAX_FILES = 3000
 MAX_UNPACKED = 300 * 1024 * 1024
 MAX_PULSE_MS = 150
 ID_RE = re.compile(r'[A-Za-z0-9][A-Za-z0-9_-]{0,39}')
+VER_RE = re.compile(r'[0-9]+(\.[0-9]+){0,3}')          # 1, 1.2 or 1.2.3 (up to four numbers)
 SAFE_EXT = {'.yaml', '.yml', '.json', '.md', '.txt', '.csv', '.cfg', '.ini', '.html', '.htm', '.js', '.css', '.py', '.sh',
             '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.woff', '.woff2', '.ttf', '.otf',
             '.pdf', '.mp3', '.wav', '.ogg', '.flac', '.m4a', '.mid', '.mp4', '.webm'}
@@ -66,7 +68,7 @@ def _yaml_pulses(text):
 
 def scan_zip(zf, standard=None, zip_size=None):
     standard = standard or set()
-    r = {'ok': False, 'errors': [], 'warnings': [], 'code': [], 'id': '', 'name': '', 'files': 0, 'bytes': 0}
+    r = {'ok': False, 'errors': [], 'warnings': [], 'code': [], 'id': '', 'name': '', 'version': '', 'min_portal': '', 'files': 0, 'bytes': 0}
     err = r['errors'].append
     infos = [i for i in zf.infolist() if not i.is_dir()]
     if zip_size is not None and zip_size > MAX_ZIP:
@@ -107,6 +109,10 @@ def scan_zip(zf, standard=None, zip_size=None):
     if not ID_RE.fullmatch(gid) or gid in ('game-template', 'p2k-panel', 'p2k-bridge', 'pinbox'):
         err('the game id "%s" cannot be used (letters, digits and dashes, up to 40)' % gid[:50])
     r['id'] = gid; r['name'] = str(man.get('name') or gid)[:80]
+    r['version'] = str(man.get('version') or '')[:20]; r['min_portal'] = str(man.get('min_portal') or '')[:20]
+    for k in ('version', 'min_portal'):
+        if r[k] and not VER_RE.fullmatch(r[k]):
+            err('game.json "%s" is "%s", which is not a version number like 1.2' % (k, r[k]))
     for i, n in names:
         rel = n[len(prefix):] if n.startswith(prefix) else n
         ext = posixpath.splitext(rel)[1].lower()

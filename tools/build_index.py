@@ -6,6 +6,8 @@
   --template DIR                          a checkout of the Game Template, so its own files are not listed as new code
 
 Each game is games/<id>/<id>.zip with games/<id>/info.json and an optional screenshot.png.
+info.json carries version and min_portal (the oldest Pin Portal the game works with, or empty for any); they must match game.json inside the zip.
+A game that was already listed may only be replaced by a higher version (checked against the old index.json).
 reviewed.json is {id: sha256 of the zip a maintainer has read}; a game is "reviewed" only while its zip still has that checksum.
 """
 import datetime, hashlib, json, os, sys, zipfile
@@ -21,6 +23,12 @@ def load(path, default):
         return json.load(open(path, encoding='utf-8'))
     except (OSError, ValueError):
         return default
+
+
+def _newer(a, b):
+    x = [int(n) for n in a.split('.')]; y = [int(n) for n in b.split('.')]
+    n = max(len(x), len(y)); x += [0] * (n - len(x)); y += [0] * (n - len(y))
+    return x > y
 
 
 def main():
@@ -53,11 +61,24 @@ def main():
             print('FAIL %s: %s' % (gid, '; '.join(res['errors']))); bad += 1; continue
         if res['id'] != gid:
             print('FAIL %s: game.json says the id is %s' % (gid, res['id'])); bad += 1; continue
+        ver = str(info.get('version') or res['version'] or '')
+        minp = str(info.get('min_portal') or res['min_portal'] or '')
+        bad_v = [k for k, v in (('version', ver), ('min_portal', minp)) if v and not lc.VER_RE.fullmatch(v)]
+        if bad_v:
+            print('FAIL %s: %s is not a version number like 1.2' % (gid, ', '.join(bad_v))); bad += 1; continue
+        if not ver:
+            print('FAIL %s: no version in info.json or game.json' % gid); bad += 1; continue
+        if res['version'] and res['version'] != ver:
+            print('FAIL %s: info.json says version %s but game.json in the zip says %s' % (gid, ver, res['version'])); bad += 1; continue
+        if res['min_portal'] != minp:
+            print('FAIL %s: info.json says min_portal "%s" but game.json in the zip says "%s"' % (gid, minp, res['min_portal'])); bad += 1; continue
         sha = lc.sha256(raw)
         prev = old.get(gid) or {}
+        if prev.get('sha256') and prev['sha256'] != sha and prev.get('version') and not _newer(ver, prev['version']):
+            print('FAIL %s: the zip changed but version %s is not higher than the listed %s' % (gid, ver, prev['version'])); bad += 1; continue
         out.append({'id': gid, 'name': str(info.get('name') or res['name'])[:80], 'author': str(info.get('author') or '')[:40],
                     'about': str(info.get('about') or '')[:600], 'hardware': str(info.get('hardware') or '')[:12],
-                    'licence': str(info.get('licence') or '')[:60], 'version': str(info.get('version') or '')[:20],
+                    'licence': str(info.get('licence') or '')[:60], 'version': ver[:20], 'min_portal': minp[:20],
                     'bytes': len(raw), 'sha256': sha, 'reviewed': reviewed.get(gid) == sha, 'code': res['code'][:40],
                     'screenshot': os.path.isfile(os.path.join(d, 'screenshot.png')),
                     'updated': prev.get('updated') if prev.get('sha256') == sha and prev.get('updated') else today})
