@@ -1,31 +1,3 @@
 {
- "games": [
-  {
-   "id": "test-game",
-   "name": "Test Game",
-   "author": "Skipp",
-   "about": "Test Game, a game for a Pinball 2000 cabinet, made from the Game Template.",
-   "hardware": "p2kd",
-   "licence": "CC BY",
-   "version": "1",
-   "min_portal": "",
-   "bytes": 341923,
-   "sha256": "029c499afb1c342384e4c355a61ec922ce4b99254d202894dcf58c21df107e24",
-   "reviewed": false,
-   "code": [
-    "start-test-game.sh",
-    "display/backglass.html",
-    "display/game.js",
-    "display/core.js",
-    "display/edit.js",
-    "display/index.html",
-    "modes/status_page/code/status_page.py",
-    "modes/reset_game/code/reset_game.py",
-    "modes/quit_combo/code/quit_combo.py",
-    "modes/switch_health/code/switch_health.py"
-   ],
-   "screenshot": false,
-   "updated": "2026-10-25"
-  }
- ]
+ "games": []
 }
